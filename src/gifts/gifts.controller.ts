@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Req, Query } from '@nestjs/common';
 import { GiftsService } from './gifts.service';
 import { CreateGiftDto } from './dto/create-gift.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -17,6 +17,12 @@ export class GiftsController {
   @UseGuards(AuthGuard('jwt'))
   findMyGifts(@Req() req) {
     return this.giftsService.findMyGifts(req.user.userId);
+  }
+
+  @Get('search-users')
+  @UseGuards(AuthGuard('jwt'))
+  searchUsers(@Query('q') query: string) {
+    return this.giftsService.searchUsers(query);
   }
 
   @Get()

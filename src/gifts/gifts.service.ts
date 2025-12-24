@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service'; // Import PrismaService
+import { PrismaService } from 'src/prisma.service';
 import { CreateGiftDto } from './dto/create-gift.dto';
-import { UpdateGiftDto } from './dto/update-gift.dto'; // Nest tự tạo file này
+import { UpdateGiftDto } from './dto/update-gift.dto';
 
 @Injectable()
 export class GiftsService {
@@ -11,8 +11,50 @@ export class GiftsService {
   async create(createGiftDto: CreateGiftDto, userId?: string) {
     return this.prisma.gift.create({
       data: {
-        ...createGiftDto,
-        senderId: userId || null, 
+        content: createGiftDto.content,
+        receiverName: createGiftDto.receiverName, // Tên hiển thị (luôn có)
+        theme: createGiftDto.theme,
+        
+        // Link tới tài khoản người gửi (nếu đã đăng nhập)
+        senderId: userId || null,
+        
+        // Link tới tài khoản người nhận (nếu tìm thấy trong hệ thống)
+        // Lưu ý: Nếu receiverId là chuỗi rỗng "", ta chuyển thành null
+        receiverId: createGiftDto.receiverId || null, 
+      },
+    });
+  }
+
+  // Tìm kiếm người dùng (Cho tính năng Autocomplete)
+  async searchUsers(query: string) {
+    return this.prisma.user.findMany({
+      where: {
+        OR: [
+          // Tìm theo tên hiển thị (không phân biệt hoa thường)
+          { displayName: { contains: query, mode: 'insensitive' } },
+          // Hoặc tìm theo email
+          { email: { contains: query, mode: 'insensitive' } }
+        ]
+      },
+      // Chỉ lấy những thông tin cần thiết, KHÔNG lấy mật khẩu hay thông tin nhạy cảm
+      select: { 
+        id: true, 
+        displayName: true, 
+        email: true, 
+        avatarUrl: true 
+      },
+      take: 5 // Chỉ lấy tối đa 5 người để hiển thị cho gọn
+    });
+  }
+
+  // Lấy quà của tôi
+  async findMyGifts(userId: string) {
+    return this.prisma.gift.findMany({
+      where: { 
+        senderId: userId // Chỉ lấy quà của user này
+      },
+      orderBy: { 
+        createdAt: 'desc' // Sắp xếp mới nhất lên đầu
       },
     });
   }
@@ -44,17 +86,6 @@ export class GiftsService {
     }
 
     return gift;
-  }
-
-  async findMyGifts(userId: string) {
-    return this.prisma.gift.findMany({
-      where: { 
-        senderId: userId // Chỉ lấy quà của user này
-      },
-      orderBy: { 
-        createdAt: 'desc' // Sắp xếp mới nhất lên đầu
-      },
-    });
   }
   
   // Các hàm update/remove mặc định bạn có thể để trống hoặc xóa đi nếu chưa dùng
