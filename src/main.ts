@@ -15,7 +15,7 @@ async function bootstrap() {
       'http://localhost:3000',                        // Cho phép Frontend Local (Next.js chạy máy nhà)
       'http://localhost:3001',                        // Cho phép chính nó (nếu test API bằng trình duyệt)
       'https://christmas-backend-vida.onrender.com',  // Cho phép chính domain Render (để test swagger/api)
-      'https://christmas-frontend-eta.vercel.app/',   // Sau khi bạn deploy Frontend lên Vercel
+      'https://christmas-frontend-eta.vercel.app',   // Sau khi bạn deploy Frontend lên Vercel
     ],
     credentials: true,
   });
