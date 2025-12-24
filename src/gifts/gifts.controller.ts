@@ -10,11 +10,13 @@ export class GiftsController {
   @Post()
   @UseGuards(AuthGuard('jwt'))
   create(@Body() createGiftDto: CreateGiftDto, @Req() req) {
-    // Khi qua được lính gác, thông tin user sẽ nằm trong req.user
-    const user = req.user;
-    
-    // Truyền userId vào service
-    return this.giftsService.create(createGiftDto, user.userId);
+    return this.giftsService.create(createGiftDto, req.user.userId);
+  }
+
+  @Get()
+  @UseGuards(AuthGuard('jwt'))
+  findMyGifts(@Req() req) {
+    return this.giftsService.findMyGifts(req.user.userId);
   }
 
   @Get()

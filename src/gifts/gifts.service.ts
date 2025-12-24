@@ -45,6 +45,17 @@ export class GiftsService {
 
     return gift;
   }
+
+  async findMyGifts(userId: string) {
+    return this.prisma.gift.findMany({
+      where: { 
+        senderId: userId // Chỉ lấy quà của user này
+      },
+      orderBy: { 
+        createdAt: 'desc' // Sắp xếp mới nhất lên đầu
+      },
+    });
+  }
   
   // Các hàm update/remove mặc định bạn có thể để trống hoặc xóa đi nếu chưa dùng
   update(id: number, updateGiftDto: UpdateGiftDto) { return `This action updates a #${id} gift`; }
