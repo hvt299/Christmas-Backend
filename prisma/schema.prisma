@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Bảng User: Lưu thông tin người dùng (đồng bộ từ Supabase Auth nếu cần)
+model User {
+  id           String   @id @default(uuid()) // Hoặc dùng String để map với Supabase Auth UID
+  email        String   @unique
+  displayName  String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  
+  // Quan hệ: Một user có thể gửi nhiều quà (Sender) và nhận nhiều quà (Receiver)
+  sentGifts     Gift[]   @relation("Sender")
+  receivedGifts Gift[]   @relation("Receiver") // Nếu người nhận cũng là user trong hệ thống
+  wishes        Wish[]
+}
+
+// Bảng Gift: Hộp quà bí mật
+model Gift {
+  id           String   @id @default(uuid())
+  content      String   // Lời chúc
+  
+  // --- Quan hệ Người Gửi (Sender) ---
+  senderId     String?  // Có thể ẩn danh (null)
+  sender       User?    @relation("Sender", fields: [senderId], references: [id])
+  
+  // --- Quan hệ Người Nhận (Receiver) ---
+  // receiverName: Tên hiển thị trên hộp quà (ví dụ: "Gửi Crush")
+  receiverName String   // Tên người nhận (hiển thị trên hộp quà)
+  // receiverId: Link tới tài khoản User nhận (có thể null nếu họ chưa có tài khoản)
+  receiverId   String?
+  receiver     User?     @relation("Receiver", fields: [receiverId], references: [id])
+
+  isOpened     Boolean  @default(false) // Trạng thái đã mở hay chưa
+  theme        String   @default("red_box") // Loại hộp quà (đỏ, xanh, vàng...)
+  musicUrl     String?  // Nhạc riêng cho hộp quà này (nếu có)
+  
+  createdAt    DateTime @default(now())
+  openedAt     DateTime?
+}
+
+// Bảng Wish: Điều ước lên cây thông (Real-time)
+model Wish {
+  id             String   @id @default(uuid())
+  message        String
+  decorationType String   @default("star") // star, ball, sock...
+  userId         String?  // Có thể là khách vãng lai (null)
+  user           User?    @relation(fields: [userId], references: [id])
+  
+  createdAt      DateTime @default(now())
+}
+
+// Bảng Song: Nhạc nền hệ thống
+model Song {
+  id        String   @id @default(uuid())
+  title     String
+  artist    String
+  url       String
+  coverUrl  String?
+  isActive  Boolean  @default(true)
+}
