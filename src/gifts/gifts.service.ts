@@ -1,26 +1,31 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { CreateGiftDto } from './dto/create-gift.dto';
 import { UpdateGiftDto } from './dto/update-gift.dto';
 
 @Injectable()
 export class GiftsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // Tạo quà
   async create(createGiftDto: CreateGiftDto, userId?: string) {
+    const currentMonth = new Date().getMonth() + 1; // 0-11 nên phải +1
+    if (currentMonth !== 12) {
+      throw new ForbiddenException('Ho ho ho! Cỗ xe tuần lộc chỉ nhận quà vào tháng 12 thôi nhé! 🦌');
+    }
+
     return this.prisma.gift.create({
       data: {
         content: createGiftDto.content,
         receiverName: createGiftDto.receiverName, // Tên hiển thị (luôn có)
         theme: createGiftDto.theme,
-        
+
         // Link tới tài khoản người gửi (nếu đã đăng nhập)
         senderId: userId || null,
-        
+
         // Link tới tài khoản người nhận (nếu tìm thấy trong hệ thống)
         // Lưu ý: Nếu receiverId là chuỗi rỗng "", ta chuyển thành null
-        receiverId: createGiftDto.receiverId || null, 
+        receiverId: createGiftDto.receiverId || null,
       },
     });
   }
@@ -37,11 +42,11 @@ export class GiftsService {
         ]
       },
       // Chỉ lấy những thông tin cần thiết, KHÔNG lấy mật khẩu hay thông tin nhạy cảm
-      select: { 
-        id: true, 
-        displayName: true, 
-        email: true, 
-        avatarUrl: true 
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        avatarUrl: true
       },
       take: 5 // Chỉ lấy tối đa 5 người để hiển thị cho gọn
     });
@@ -50,10 +55,10 @@ export class GiftsService {
   // Lấy quà của tôi
   async findMyGifts(userId: string) {
     return this.prisma.gift.findMany({
-      where: { 
+      where: {
         senderId: userId // Chỉ lấy quà của user này
       },
-      orderBy: { 
+      orderBy: {
         createdAt: 'desc' // Sắp xếp mới nhất lên đầu
       },
     });
@@ -68,8 +73,8 @@ export class GiftsService {
   async findOne(id: string) {
     const gift = await this.prisma.gift.findUnique({
       where: { id },
-      include: { 
-        sender: { select: { displayName: true, avatarUrl: true } } 
+      include: {
+        sender: { select: { displayName: true, avatarUrl: true } }
       },
     });
 
@@ -87,7 +92,7 @@ export class GiftsService {
 
     return gift;
   }
-  
+
   // Các hàm update/remove mặc định bạn có thể để trống hoặc xóa đi nếu chưa dùng
   update(id: number, updateGiftDto: UpdateGiftDto) { return `This action updates a #${id} gift`; }
   remove(id: number) { return `This action removes a #${id} gift`; }
