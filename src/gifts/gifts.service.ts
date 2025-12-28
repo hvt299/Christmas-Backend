@@ -70,7 +70,7 @@ export class GiftsService {
   }
 
   // Mở hộp quà (Tìm theo ID)
-  async findOne(id: string) {
+  async findOne(id: string, shouldMarkOpen: boolean = true) {
     const gift = await this.prisma.gift.findUnique({
       where: { id },
       include: {
@@ -83,7 +83,7 @@ export class GiftsService {
     }
 
     // Nếu chưa mở thì đánh dấu là đã mở
-    if (!gift.isOpened) {
+    if (shouldMarkOpen && !gift.isOpened) {
       await this.prisma.gift.update({
         where: { id },
         data: { isOpened: true, openedAt: new Date() },
@@ -112,7 +112,7 @@ export class GiftsService {
         theme: UpdateGiftDto.theme,
         musicUrl: UpdateGiftDto.musicUrl,
         receiverName: UpdateGiftDto.receiverName,
-        // Không cho phép sửa senderId hoặc receiverId tùy ý
+        receiverId: UpdateGiftDto.receiverId,
       },
     });
   }
