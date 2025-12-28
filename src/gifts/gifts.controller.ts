@@ -6,7 +6,7 @@ import { AuthGuard } from '@nestjs/passport';
 
 @Controller('gifts')
 export class GiftsController {
-  constructor(private readonly giftsService: GiftsService) {}
+  constructor(private readonly giftsService: GiftsService) { }
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
@@ -26,31 +26,34 @@ export class GiftsController {
     return this.giftsService.searchUsers(query);
   }
 
-  @Get()
+  @Get('admin/all')
   findAll() {
     return this.giftsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.giftsService.findOne(id);
+  async findOne(
+    @Param('id') id: string,
+    @Query('view') view: string // Thêm tham số này (ví dụ: ?view=edit)
+  ) {
+    // Nếu view là 'edit' -> KHÔNG đánh dấu là đã mở
+    const isOpening = view !== 'edit';
+    return this.giftsService.findOne(id, isOpening);
   }
 
   @Put(':id')
   @UseGuards(AuthGuard('jwt'))
   async updateGift(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @Body() updateData: UpdateGiftDto,
     @Req() req: any
   ) {
-    const userId = req.user.id || req.user.sub;
-    return this.giftsService.updateGift(userId, id, updateData);
+    return this.giftsService.updateGift(req.user.userId, id, updateData);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
   async deleteGift(@Param('id') id: string, @Req() req: any) {
-    const userId = req.user.id || req.user.sub;
-    return this.giftsService.deleteGift(userId, id);
+    return this.giftsService.deleteGift(req.user.userId, id);
   }
 }
