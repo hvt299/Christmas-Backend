@@ -93,7 +93,50 @@ export class GiftsService {
     return gift;
   }
 
-  // Các hàm update/remove mặc định bạn có thể để trống hoặc xóa đi nếu chưa dùng
-  update(id: number, updateGiftDto: UpdateGiftDto) { return `This action updates a #${id} gift`; }
-  remove(id: number) { return `This action removes a #${id} gift`; }
+  async updateGift(userId: string, giftId: string, UpdateGiftDto: UpdateGiftDto) {
+    // 1. Tìm quà
+    const gift = await this.prisma.gift.findUnique({ where: { id: giftId } });
+
+    if (!gift) throw new NotFoundException('Không tìm thấy quà');
+
+    // 2. Check quyền chính chủ
+    if (gift.senderId !== userId) {
+      throw new ForbiddenException('Không được sửa quà của người khác!');
+    }
+
+    // 3. Update
+    return this.prisma.gift.update({
+      where: { id: giftId },
+      data: {
+        content: UpdateGiftDto.content,
+        theme: UpdateGiftDto.theme,
+        musicUrl: UpdateGiftDto.musicUrl,
+        receiverName: UpdateGiftDto.receiverName,
+        // Không cho phép sửa senderId hoặc receiverId tùy ý
+      },
+    });
+  }
+
+  // Xóa hộp quà
+  async deleteGift(userId: string, giftId: string) {
+    // 1. Tìm xem món quà có tồn tại không
+    const gift = await this.prisma.gift.findUnique({
+      where: { id: giftId },
+    });
+
+    if (!gift) {
+      throw new NotFoundException('Món quà này không tồn tại hoặc đã bị xóa!');
+    }
+
+    // 2. QUAN TRỌNG: Kiểm tra quyền sở hữu (Chính chủ mới được xóa)
+    // So sánh ID người đang đăng nhập (userId) với người tạo quà (senderId)
+    if (gift.senderId !== userId) {
+      throw new ForbiddenException('Bạn không có quyền xóa món quà của người khác!');
+    }
+
+    // 3. Nếu mọi thứ ok -> Tiến hành xóa
+    return this.prisma.gift.delete({
+      where: { id: giftId },
+    });
+  }
 }
