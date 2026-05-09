@@ -1,26 +1,35 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaModule } from './prisma.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { EmailModule } from './email/email.module';
 import { GiftsModule } from './gifts/gifts.module';
 import { WishesModule } from './wishes/wishes.module';
 import { SongsModule } from './songs/songs.module';
-import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
-    // Load biến môi trường .env
-    ConfigModule.forRoot({ isGlobal: true }), 
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env.local', '.env'],
+    }),
 
-    // DÙNG PRISMA MODULE (Đã kết nối DB)
-    PrismaModule, 
-    
-    // Các module chức năng
-    GiftsModule, 
-    WishesModule, 
-    SongsModule, 
-    AuthModule
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGO_URI'),
+      }),
+    }),
+
+    EmailModule,
+    UsersModule,
+    AuthModule,
+    GiftsModule,
+    WishesModule,
+    SongsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
