@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards, Request, Body, Get, Query } from '@nestjs/common';
+import { Controller, Post, UseGuards, Request, Body, Get, Query, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
@@ -40,5 +40,13 @@ export class AuthController {
   @ApiOperation({ summary: 'Đặt lại mật khẩu mới từ link email' })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto.token, resetPasswordDto.newPassword);
+  }
+
+  @Post('google')
+  @ApiOperation({ summary: 'Đăng nhập bằng Google Token' })
+  @ApiBody({ schema: { type: 'object', properties: { token: { type: 'string' } } } })
+  async googleLogin(@Body('token') token: string) {
+    if (!token) throw new BadRequestException('Thiếu token Google!');
+    return this.authService.googleLogin(token);
   }
 }
