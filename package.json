@@ -1,5 +1,5 @@
 {
-  "name": "nest-typescript-starter",
+  "name": "christmas-wishes-backend",
   "private": true,
   "version": "1.0.0",
   "description": "Nest TypeScript starter repository",
@@ -96,5 +96,8 @@
       "@nestjs/core",
       "@swc/core"
     ]
+  },
+  "overrides": {
+    "file-type": "^21.0.0"
   }
 }
