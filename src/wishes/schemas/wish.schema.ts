@@ -3,7 +3,7 @@ import { Document, Types } from 'mongoose';
 
 export type WishDocument = Wish & Document;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'xmas_wishes' })
 export class Wish {
     @Prop({ required: true })
     message!: string;

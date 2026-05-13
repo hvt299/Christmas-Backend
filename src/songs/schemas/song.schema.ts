@@ -3,7 +3,7 @@ import { Document } from 'mongoose';
 
 export type SongDocument = Song & Document;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'xmas_songs' })
 export class Song {
     @Prop({ required: true })
     title: string;

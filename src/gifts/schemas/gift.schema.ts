@@ -3,7 +3,7 @@ import { Document, Types } from 'mongoose';
 
 export type GiftDocument = Gift & Document;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'xmas_gifts' })
 export class Gift {
     @Prop({ required: true })
     content: string;
