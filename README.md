@@ -1,98 +1,141 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+<div align="center">
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+  <h1>🎄 Christmas Wishes System 🎁</h1>
+  <h3>Hệ thống Backend API gửi tặng quà Giáng Sinh</h3>
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+  <p>
+    Một giải pháp Backend mạnh mẽ được xây dựng bằng kiến trúc Modular của NestJS. 
+    Hệ thống cung cấp RESTful API để quản lý người dùng, xác thực bảo mật và xử lý toàn bộ nghiệp vụ tạo, đóng gói và chia sẻ các hộp quà Giáng Sinh bí mật.
+  </p>
 
-## Description
+  <p>
+    <img src="https://img.shields.io/badge/license-UNLICENSED-red" alt="License">
+    <img src="https://img.shields.io/badge/status-Active_Development-success" alt="Status">
+    <img src="https://img.shields.io/badge/framework-NestJS_11-E0234E?logo=nestjs" alt="NestJS">
+  </p>
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+</div>
 
-## Project setup
+<br />
+
+# ⚙️ BACKEND API SERVICE
+
+Đây là Repository chứa mã nguồn **Backend**, đóng vai trò là lõi xử lý nghiệp vụ, quản lý cơ sở dữ liệu (MongoDB) và cung cấp RESTful API cho hệ thống Frontend Christmas Wishes.
+
+## 🛠️ Công nghệ & Phiên bản
+
+Dựa trên cấu hình `package.json`:
+
+| Công nghệ | Phiên bản | Vai trò |
+| :--- | :--- | :--- |
+| **[NestJS](https://nestjs.com/)** | `^11.0.17` | Framework backend Node.js, kiến trúc Modular |
+| **[@nestjs/mongoose](https://docs.nestjs.com/techniques/mongodb)** | `^11.0.4` | Tích hợp MongoDB với NestJS |
+| **[Mongoose](https://mongoosejs.com/)** | `^9.6.2` | ODM MongoDB, quản lý Schema & Validation |
+| **[google-auth-library](https://github.com/googleapis/google-auth-library-nodejs)** | `^10.6.2` | Xử lý xác thực Token từ Google OAuth2 (Google Login) |
+| **[@getbrevo/brevo](https://www.brevo.com/)** | `^3.0.4` | Dịch vụ gửi Email (Xác thực, Quên mật khẩu) |
+| **[bcrypt](https://www.npmjs.com/package/bcrypt)** | `^6.0.0` | Mã hóa và bảo mật mật khẩu người dùng |
+| **[passport-jwt](https://www.passportjs.org/)**| `^4.0.1` | Strategy xác thực người dùng bằng cơ chế JWT |
+| **[@nestjs/swagger](https://docs.nestjs.com/openapi/introduction)**| `^11.4.2` | Tự động tạo tài liệu API (OpenAPI) |
+
+## 🌟 Tính năng nghiệp vụ (Modules)
+
+* **🔐 Auth & Users:**
+  * Xác thực người dùng đa phương thức: JWT truyền thống và Google OAuth2 (Tự động liên kết/tạo tài khoản bằng email).
+  * Mã hóa mật khẩu bảo mật chuẩn bcrypt.
+  * Tính năng cập nhật hồ sơ cá nhân và thay đổi mật khẩu (yêu cầu xác thực mật khẩu cũ).
+  * Hệ thống tài khoản dùng chung (SSO): Người dùng có thể sử dụng cùng một tài khoản cho cả sự kiện Tết và Giáng sinh.
+
+* **🎁 Quản lý Quà Tặng (Gifts):**
+  * **Tạo Quà:** Đóng gói hộp quà với nội dung lời chúc, tùy chỉnh màu sắc hộp quà (đỏ, xanh, vàng) và đính kèm đường dẫn nhạc nền.
+  * **Danh sách Quà:** Lấy danh sách các món quà người dùng đã tạo để quản lý và chia sẻ link.
+  * **Mở Quà:** Cung cấp dữ liệu chi tiết của hộp quà dựa trên ID để hiển thị hiệu ứng 3D và phát nhạc bên phía Frontend.
+
+* **📧 Hệ thống Email (Brevo):**
+  * Tích hợp Brevo API để tự động gửi email.
+  * Hỗ trợ luồng gửi mã OTP khôi phục mật khẩu an toàn.
+
+## 🚀 Cài đặt & Khởi chạy
+
+### 1️⃣ Yêu cầu hệ thống (Prerequisites)
+
+- Node.js >= 20
+- MongoDB (Local hoặc MongoDB Atlas)
+
+### 2️⃣ Clone & Cài đặt Dependencies
 
 ```bash
-$ npm install
+git clone https://github.com/hvt299/Christmas-Wishes-Backend.git
+cd Christmas-Wishes-Backend
+npm install
 ```
 
-## Compile and run the project
+### 3️⃣ Cấu hình môi trường (.env)
+
+Tạo file `.env` tại thư mục gốc của dự án:
+
+```env
+PORT=3001
+FRONTEND_URL=http://localhost:3000
+MONGO_URI=mongodb://localhost:27017/festive_events
+
+GEMINI_API_KEY=YourSecretKeyHere
+
+JWT_SECRET=YourSecretKeyHere
+JWT_EXPIRATION=1d
+
+SENDER_EMAIL=YourEmailHere
+BREVO_API_KEY=YourSecretKeyHere
+GOOGLE_CLIENT_ID=YourSecretKeyHere
+```
+
+### 4️⃣ Lệnh chạy (Scripts)
 
 ```bash
-# development
-$ npm run start
+# Chạy môi trường phát triển (Watch mode)
+npm run start:dev
 
-# watch mode
-$ npm run start:dev
+# Build ra production
+npm run build
 
-# production mode
-$ npm run start:prod
+# Chạy bản production
+npm run start:prod
 ```
 
-## Run tests
+### 5️⃣ Testing
 
 ```bash
-# unit tests
-$ npm run test
+# Unit tests
+npm run test
 
-# e2e tests
-$ npm run test:e2e
+# E2E tests
+npm run test:e2e
 
-# test coverage
-$ npm run test:cov
+# Coverage report
+npm run test:cov
 ```
 
-## Deployment
+## 📚 Tài liệu API (Swagger)
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Sau khi chạy server, truy cập đường dẫn sau để xem toàn bộ tài liệu API:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+http://localhost:3001/api
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+Swagger UI hiển thị đầy đủ danh sách Route, Request Body và Response Schema.
+
+## 📂 Cấu trúc Module
+
+```text
+src/
+├── app.module.ts          # Root module
+├── main.ts                # Application entry point, thiết lập CORS & Swagger
+├── auth/                  # Logic Đăng nhập, Đăng ký, JWT Strategy, Google Login
+├── users/                 # Module quản lý tài khoản User & Profile
+├── gifts/                 # Module xử lý CRUD cho hộp quà Giáng Sinh
+├── email/                 # Service gửi email (Quên mật khẩu) thông qua Brevo
+└── ...
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 👨‍💻 Author
 
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Developed by **Mr.T (hvt299)**  
+GitHub: [https://github.com/hvt299](https://github.com/hvt299)
