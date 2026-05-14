@@ -1,142 +1,120 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateGiftDto } from './dto/create-gift.dto';
 import { UpdateGiftDto } from './dto/update-gift.dto';
+import { Gift, GiftDocument } from './schemas/gift.schema';
+import { User, UserDocument } from '../users/schemas/user.schema';
 
 @Injectable()
 export class GiftsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    @InjectModel(Gift.name) private giftModel: Model<GiftDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>
+  ) { }
 
-  // Tạo quà
+  private checkValidObjectId(id: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('ID không hợp lệ!');
+    }
+  }
+
   async create(createGiftDto: CreateGiftDto, userId?: string) {
-    const currentMonth = new Date().getMonth() + 1; // 0-11 nên phải +1
+    const currentMonth = new Date().getMonth() + 1;
     if (currentMonth !== 12) {
       throw new ForbiddenException('Ho ho ho! Cỗ xe tuần lộc chỉ nhận quà vào tháng 12 thôi nhé! 🦌');
     }
 
-    return this.prisma.gift.create({
-      data: {
-        content: createGiftDto.content,
-        receiverName: createGiftDto.receiverName, // Tên hiển thị (luôn có)
-        theme: createGiftDto.theme,
-
-        // Link tới tài khoản người gửi (nếu đã đăng nhập)
-        senderId: userId || null,
-
-        // Link tới tài khoản người nhận (nếu tìm thấy trong hệ thống)
-        // Lưu ý: Nếu receiverId là chuỗi rỗng "", ta chuyển thành null
-        receiverId: createGiftDto.receiverId || null,
-      },
+    const newGift = new this.giftModel({
+      content: createGiftDto.content,
+      receiverName: createGiftDto.receiverName,
+      theme: createGiftDto.theme,
+      senderId: userId || null,
+      receiverId: createGiftDto.receiverId || null,
     });
+
+    return newGift.save();
   }
 
-  // Tìm kiếm người dùng (Cho tính năng Autocomplete)
   async searchUsers(query: string) {
-    return this.prisma.user.findMany({
-      where: {
-        OR: [
-          // Tìm theo tên hiển thị (không phân biệt hoa thường)
-          { displayName: { contains: query, mode: 'insensitive' } },
-          // Hoặc tìm theo email
-          { email: { contains: query, mode: 'insensitive' } }
-        ]
-      },
-      // Chỉ lấy những thông tin cần thiết, KHÔNG lấy mật khẩu hay thông tin nhạy cảm
-      select: {
-        id: true,
-        displayName: true,
-        email: true,
-        avatarUrl: true
-      },
-      take: 5 // Chỉ lấy tối đa 5 người để hiển thị cho gọn
-    });
+    return this.userModel.find({
+      $or: [
+        { fullName: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } }
+      ]
+    })
+      .select('_id fullName email avatar')
+      .limit(5)
+      .exec();
   }
 
-  // Lấy quà của tôi
   async findMyGifts(userId: string) {
-    return this.prisma.gift.findMany({
-      where: {
-        senderId: userId // Chỉ lấy quà của user này
-      },
-      orderBy: {
-        createdAt: 'desc' // Sắp xếp mới nhất lên đầu
-      },
-    });
+    return this.giftModel
+      .find({ senderId: userId })
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
-  // Lấy tất cả (Dùng để test, sau này xóa cũng được)
   findAll() {
-    return this.prisma.gift.findMany();
+    return this.giftModel.find().exec();
   }
 
-  // Mở hộp quà (Tìm theo ID)
   async findOne(id: string, shouldMarkOpen: boolean = true) {
-    const gift = await this.prisma.gift.findUnique({
-      where: { id },
-      include: {
-        sender: { select: { displayName: true, avatarUrl: true } }
-      },
-    });
+    this.checkValidObjectId(id);
+
+    const gift = await this.giftModel
+      .findById(id)
+      .populate('senderId', 'fullName avatar')
+      .exec();
 
     if (!gift) {
       throw new NotFoundException('Hộp quà này không tồn tại!');
     }
 
-    // Nếu chưa mở thì đánh dấu là đã mở
     if (shouldMarkOpen && !gift.isOpened) {
-      await this.prisma.gift.update({
-        where: { id },
-        data: { isOpened: true, openedAt: new Date() },
-      });
+      gift.isOpened = true;
+      gift.openedAt = new Date();
+      await gift.save();
     }
 
     return gift;
   }
 
-  async updateGift(userId: string, giftId: string, UpdateGiftDto: UpdateGiftDto) {
-    // 1. Tìm quà
-    const gift = await this.prisma.gift.findUnique({ where: { id: giftId } });
+  async updateGift(userId: string, giftId: string, updateGiftDto: UpdateGiftDto) {
+    this.checkValidObjectId(giftId);
 
+    const gift = await this.giftModel.findById(giftId).exec();
     if (!gift) throw new NotFoundException('Không tìm thấy quà');
 
-    // 2. Check quyền chính chủ
-    if (gift.senderId !== userId) {
+    if (gift.senderId?.toString() !== userId) {
       throw new ForbiddenException('Không được sửa quà của người khác!');
     }
 
-    // 3. Update
-    return this.prisma.gift.update({
-      where: { id: giftId },
-      data: {
-        content: UpdateGiftDto.content,
-        theme: UpdateGiftDto.theme,
-        musicUrl: UpdateGiftDto.musicUrl,
-        receiverName: UpdateGiftDto.receiverName,
-        receiverId: UpdateGiftDto.receiverId,
+    return this.giftModel.findByIdAndUpdate(
+      giftId,
+      {
+        content: updateGiftDto.content,
+        theme: updateGiftDto.theme,
+        musicUrl: updateGiftDto.musicUrl,
+        receiverName: updateGiftDto.receiverName,
+        receiverId: updateGiftDto.receiverId || null,
       },
-    });
+      { new: true }
+    ).exec();
   }
 
-  // Xóa hộp quà
   async deleteGift(userId: string, giftId: string) {
-    // 1. Tìm xem món quà có tồn tại không
-    const gift = await this.prisma.gift.findUnique({
-      where: { id: giftId },
-    });
+    this.checkValidObjectId(giftId);
 
+    const gift = await this.giftModel.findById(giftId).exec();
     if (!gift) {
       throw new NotFoundException('Món quà này không tồn tại hoặc đã bị xóa!');
     }
 
-    // 2. QUAN TRỌNG: Kiểm tra quyền sở hữu (Chính chủ mới được xóa)
-    // So sánh ID người đang đăng nhập (userId) với người tạo quà (senderId)
-    if (gift.senderId !== userId) {
+    if (gift.senderId?.toString() !== userId) {
       throw new ForbiddenException('Bạn không có quyền xóa món quà của người khác!');
     }
 
-    // 3. Nếu mọi thứ ok -> Tiến hành xóa
-    return this.prisma.gift.delete({
-      where: { id: giftId },
-    });
+    return this.giftModel.findByIdAndDelete(giftId).exec();
   }
 }
